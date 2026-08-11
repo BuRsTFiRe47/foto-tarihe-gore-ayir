@@ -1,0 +1,12 @@
+# PyInstaller çıktı klasörleri
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db

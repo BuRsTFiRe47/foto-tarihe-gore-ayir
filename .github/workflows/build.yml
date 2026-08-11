@@ -1,0 +1,78 @@
+name: Build
+
+# Bu workflow, kod GitHub'ın kendi sunucularında (Windows, Apple Silicon Mac)
+# derlenir. Böylece kullanıcılar "rastgele bir exe" değil, tamamen açık
+# kaynaktan GitHub tarafından üretilmiş bir dosya indirmiş olur. Derleme
+# günlükleri (Actions sekmesi) herkese açıktır.
+#
+# Not: Intel Mac (x86_64) derlemesi kaldırıldı. GitHub Aralık 2025'te
+# macos-13 runner'ını emekliye ayırdı ve Apple Intel mimarisini artık
+# desteklemiyor; Intel Mac desteği tekrar isterseniz macos-15-intel
+# etiketiyle ayrı bir job eklenebilir.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}   # Actions sekmesinden elle de tetiklenebilir
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bağımlılıkları kur
+        run: pip install pillow pyinstaller
+      - name: exe derle
+        run: >
+          pyinstaller --onefile --noconsole
+          --name "FotoTariheGoreAyir"
+          foto_tarihe_gore_ayir.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FotoTariheGoreAyir-Windows
+          path: dist/FotoTariheGoreAyir.exe
+
+  build-macos-arm64:
+    # macos-15 runner'ları Apple Silicon (M serisi, arm64) üzerinde çalışır
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bağımlılıkları kur
+        run: pip install pillow pyinstaller
+      - name: .app derle
+        run: >
+          pyinstaller --windowed
+          --name "FotoTariheGoreAyir"
+          foto_tarihe_gore_ayir.py
+      - name: .app dosyasını ziple
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent "FotoTariheGoreAyir.app" "FotoTariheGoreAyir-macOS-AppleSilicon.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FotoTariheGoreAyir-macOS-AppleSilicon
+          path: dist/FotoTariheGoreAyir-macOS-AppleSilicon.zip
+
+  release:
+    # Sadece bir "v1.0.0" gibi tag push edildiğinde, iki platformu da
+    # bir GitHub Release'e otomatik ekler.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-windows, build-macos-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Release oluştur ve dosyaları ekle
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/FotoTariheGoreAyir-Windows/FotoTariheGoreAyir.exe
+            artifacts/FotoTariheGoreAyir-macOS-AppleSilicon/FotoTariheGoreAyir-macOS-AppleSilicon.zip

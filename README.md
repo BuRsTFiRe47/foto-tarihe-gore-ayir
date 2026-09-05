@@ -7,6 +7,12 @@ temalı basit bir masaüstü uygulaması.
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
+<img src="docs/screenshot-dark.png" width="600" alt="Uygulama görünümü (koyu mod)">
+
+*(Not: Yukarıdaki görüntü Linux üzerinde alınmıştır; Windows ve macOS'ta yazı
+tipleri sisteminizin kendi fontuyla — Segoe UI / San Francisco — daha
+akıcı görünür.)*
+
 ## Özellikler
 
 - 📅 EXIF çekim tarihi veya dosya değiştirilme tarihine göre ayırma
@@ -54,7 +60,7 @@ Windows SmartScreen "Windows bu uygulamayı korudu" uyarısı gösterebilir.
 ## Kaynaktan çalıştırma
 
 ```bash
-pip install pillow
+pip install pillow customtkinter
 python foto_tarihe_gore_ayir.py
 ```
 
@@ -63,16 +69,20 @@ python foto_tarihe_gore_ayir.py
 ### Windows
 
 ```bat
-pip install pillow pyinstaller
-pyinstaller --onefile --noconsole --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+pip install pillow customtkinter pyinstaller
+pyinstaller --onefile --noconsole --collect-all customtkinter --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
 ```
 
 ### macOS
 
 ```bash
-pip3 install pillow pyinstaller
-pyinstaller --windowed --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+pip3 install pillow customtkinter pyinstaller
+pyinstaller --windowed --collect-all customtkinter --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
 ```
+
+> Not: `--collect-all customtkinter` bayrağı şart — CustomTkinter'ın yuvarlak
+> köşe/tema görselleri için kullandığı ek veri dosyalarını da exe/app içine
+> gömer. Bu bayrak olmadan derlenen exe açılışta hata verir.
 
 > Not: PyInstaller derlemeyi yaptığı işletim sistemi ve mimari için üretir
 > (cross-compile yapamaz). Yani Apple Silicon (M serisi) bir `.app` için

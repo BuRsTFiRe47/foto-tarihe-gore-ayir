@@ -9,7 +9,7 @@ Videolarda EXIF bilgisi olmadığından, video dosyaları için her zaman dosyan
 değiştirilme tarihi kullanılır.
 
 Gereksinimler:
-    pip install pillow
+    pip install pillow customtkinter
 
 Çalıştırma:
     python foto_tarihe_gore_ayir.py
@@ -21,13 +21,14 @@ from pathlib import Path
 from datetime import datetime
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, scrolledtext
+from tkinter import filedialog, messagebox
+
+import customtkinter as ctk
 
 try:
     from PIL import Image
     from PIL import ExifTags
     PIL_AVAILABLE = True
-    # EXIF tag id -> isim eşlemesi içinde "DateTimeOriginal" olanı bul
     _DATE_TAG_ID = None
     for _tag_id, _tag_name in ExifTags.TAGS.items():
         if _tag_name == "DateTimeOriginal":
@@ -63,41 +64,25 @@ TR_MONTHS = {
     7: "Temmuz", 8: "Ağustos", 9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık",
 }
 
-# ---------- Tema renkleri ----------
-THEMES = {
-    "light": {
-        "bg": "#f4f4f6",
-        "fg": "#1c1c1e",
-        "subtle_fg": "#5b5b5f",
-        "entry_bg": "#ffffff",
-        "entry_fg": "#1c1c1e",
-        "button_bg": "#e2e2e6",
-        "button_active": "#d0d0d6",
-        "accent": "#2563eb",
-        "accent_fg": "#ffffff",
-        "border": "#c9c9cf",
-        "log_bg": "#ffffff",
-        "log_fg": "#1c1c1e",
-    },
-    "dark": {
-        "bg": "#1e1e22",
-        "fg": "#e8e8ea",
-        "subtle_fg": "#a0a0a6",
-        "entry_bg": "#2a2a2f",
-        "entry_fg": "#e8e8ea",
-        "button_bg": "#33333a",
-        "button_active": "#3f3f47",
-        "accent": "#3b82f6",
-        "accent_fg": "#ffffff",
-        "border": "#3a3a41",
-        "log_bg": "#141417",
-        "log_fg": "#d8d8da",
-    },
-}
+# ---------------------------------------------------------------------------
+# Renk paleti — (açık_mod_rengi, koyu_mod_rengi) şeklinde tuple veriliyor;
+# customtkinter, set_appearance_mode() çağrıldığında bu renkleri otomatik
+# olarak değiştiriyor, biz elle hiçbir widget'ı yeniden boyamıyoruz.
+# ---------------------------------------------------------------------------
+COLOR_BG = ("#f5f5f8", "#100f17")
+COLOR_CARD = ("#ffffff", "#1c1b24")
+COLOR_CARD_BORDER = ("#e4e4ec", "#2c2b38")
+COLOR_INPUT = ("#eef0f4", "#232230")
+COLOR_TEXT = ("#1c1c1e", "#f2f2f5")
+COLOR_MUTED = ("#6b6b74", "#9a99a8")
+COLOR_ACCENT = ("#3468e0", "#4c8bf5")
+COLOR_ACCENT_HOVER = ("#2a55bd", "#3d76d6")
+COLOR_BTN2 = ("#e7e9ee", "#2a2935")
+COLOR_BTN2_HOVER = ("#dadce3", "#34333f")
+COLOR_LOG_BG = ("#fbfbfd", "#15141b")
 
 
 def get_exif_date(path: Path):
-    """EXIF'ten çekim tarihini okumaya çalışır. Bulamazsa None döner."""
     if not PIL_AVAILABLE or _DATE_TAG_ID is None:
         return None
     try:
@@ -108,14 +93,12 @@ def get_exif_date(path: Path):
             raw = exif.get(_DATE_TAG_ID)
             if not raw:
                 return None
-            # EXIF format: "2026:08:03 14:22:10"
             return datetime.strptime(raw, "%Y:%m:%d %H:%M:%S")
     except Exception:
         return None
 
 
 def get_file_date(path: Path) -> datetime:
-    """Dosyanın değiştirilme tarihini döner (EXIF bulunamazsa yedek)."""
     return datetime.fromtimestamp(path.stat().st_mtime)
 
 
@@ -128,16 +111,13 @@ def get_photo_date(path: Path, use_exif: bool) -> datetime:
 
 
 def format_folder_name(dt: datetime, pattern: str) -> str:
-    """strftime formatını uygular; Türkçe ay adı isteniyorsa değiştirir."""
     result = dt.strftime(pattern)
     if "%B" in pattern:
-        # Sistem locale'ine bağlı kalmadan Türkçe ay adı kullan
         result = result.replace(dt.strftime("%B"), TR_MONTHS[dt.month])
     return result
 
 
 def unique_destination(dest: Path) -> Path:
-    """Aynı isimli dosya varsa sonuna (1), (2)... ekler."""
     if not dest.exists():
         return dest
     stem, suffix = dest.stem, dest.suffix
@@ -149,17 +129,39 @@ def unique_destination(dest: Path) -> Path:
         i += 1
 
 
-class PhotoSorterApp:
-    def __init__(self, root):
-        self.root = root
-        root.title("Foto Tarihe Göre Ayır")
-        root.geometry("740x680")
-        root.minsize(700, 620)
+class Card(ctk.CTkFrame):
+    """Görseldeki gibi yuvarlak köşeli, ince kenarlıklı 'kart' paneli."""
 
-        self.theme_name = "light"
-        self.style = ttk.Style()
-        if "clam" in self.style.theme_names():
-            self.style.theme_use("clam")
+    def __init__(self, master, title, **kwargs):
+        super().__init__(
+            master, corner_radius=14, fg_color=COLOR_CARD,
+            border_width=1, border_color=COLOR_CARD_BORDER, **kwargs
+        )
+        self.grid_columnconfigure(1, weight=1)
+        header = ctk.CTkLabel(
+            self, text=title, text_color=COLOR_TEXT,
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        header.grid(row=0, column=0, columnspan=3, sticky="w", padx=16, pady=(14, 6))
+        self._row = 1
+
+    def next_row(self):
+        r = self._row
+        self._row += 1
+        return r
+
+
+class PhotoSorterApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+
+        ctk.set_appearance_mode("Dark")
+        ctk.set_default_color_theme("blue")
+
+        self.title("Foto Tarihe Göre Ayır")
+        self.geometry("780x760")
+        self.minsize(720, 680)
+        self.configure(fg_color=COLOR_BG)
 
         self.source_var = tk.StringVar()
         self.dest_var = tk.StringVar()
@@ -168,13 +170,13 @@ class PhotoSorterApp:
         self.use_exif_var = tk.BooleanVar(value=True)
         self.preset_var = tk.StringVar(value=list(FORMAT_PRESETS.keys())[0])
         self.custom_format_var = tk.StringVar(value="%Y/%m/%d")
-        self.move_var = tk.BooleanVar(value=False)  # False = kopyala, True = taşı
+        self.move_var = tk.BooleanVar(value=False)
         self.order_var = tk.StringVar(value="Eskiden yeniye")
         self.prefix_var = tk.BooleanVar(value=False)
         self.dry_run_var = tk.BooleanVar(value=False)
+        self._dark = True
 
         self._build_ui()
-        self.apply_theme("light")
 
         if not PIL_AVAILABLE:
             self.log(
@@ -185,164 +187,213 @@ class PhotoSorterApp:
 
     # ---------- Tema ----------
     def toggle_theme(self):
-        self.apply_theme("dark" if self.theme_name == "light" else "light")
-
-    def apply_theme(self, name: str):
-        self.theme_name = name
-        c = THEMES[name]
-        s = self.style
-
-        self.root.configure(background=c["bg"])
-
-        s.configure(".", background=c["bg"], foreground=c["fg"],
-                    fieldbackground=c["entry_bg"])
-        s.configure("TFrame", background=c["bg"])
-        s.configure("TLabel", background=c["bg"], foreground=c["fg"])
-        s.configure("TLabelframe", background=c["bg"], foreground=c["fg"],
-                    bordercolor=c["border"])
-        s.configure("TLabelframe.Label", background=c["bg"], foreground=c["fg"])
-        s.configure("TCheckbutton", background=c["bg"], foreground=c["fg"])
-        s.map("TCheckbutton", background=[("active", c["bg"])],
-              foreground=[("active", c["fg"])])
-        s.configure("TRadiobutton", background=c["bg"], foreground=c["fg"])
-        s.map("TRadiobutton", background=[("active", c["bg"])],
-              foreground=[("active", c["fg"])])
-        s.configure("TButton", background=c["button_bg"], foreground=c["fg"],
-                    bordercolor=c["border"])
-        s.map("TButton", background=[("active", c["button_active"])])
-        s.configure("Accent.TButton", background=c["accent"], foreground=c["accent_fg"])
-        s.map("Accent.TButton", background=[("active", c["accent"])])
-        s.configure("TEntry", fieldbackground=c["entry_bg"], foreground=c["entry_fg"],
-                    bordercolor=c["border"])
-        s.configure("TCombobox", fieldbackground=c["entry_bg"], foreground=c["entry_fg"],
-                    background=c["entry_bg"])
-        s.map("TCombobox", fieldbackground=[("readonly", c["entry_bg"])],
-              foreground=[("readonly", c["entry_fg"])])
-        s.configure("Horizontal.TProgressbar", background=c["accent"],
-                    troughcolor=c["entry_bg"], bordercolor=c["border"])
-
-        if hasattr(self, "log_box"):
-            self.log_box.configure(
-                background=c["log_bg"], foreground=c["log_fg"],
-                insertbackground=c["fg"]
-            )
-        if hasattr(self, "theme_btn"):
-            self.theme_btn.configure(
-                text="☀️  Gündüz Modu" if name == "dark" else "🌙  Gece Modu"
-            )
+        self._dark = not self._dark
+        ctk.set_appearance_mode("Dark" if self._dark else "Light")
+        self.theme_btn.configure(text="☀️  Gündüz Modu" if self._dark else "🌙  Gece Modu")
 
     # ---------- UI ----------
     def _build_ui(self):
-        pad = {"padx": 8, "pady": 4}
+        outer = ctk.CTkScrollableFrame(self, fg_color=COLOR_BG)
+        outer.pack(fill="both", expand=True)
+        outer.grid_columnconfigure(0, weight=1)
 
-        # --- Üst bar: başlık + tema düğmesi ---
-        frm_top = ttk.Frame(self.root)
-        frm_top.pack(fill="x", padx=8, pady=(8, 0))
-        ttk.Label(frm_top, text="Foto Tarihe Göre Ayır", font=("Segoe UI", 13, "bold")).pack(
-            side="left"
+        # --- Üst bar ---
+        top = ctk.CTkFrame(outer, fg_color="transparent")
+        top.grid(row=0, column=0, sticky="ew", padx=18, pady=(18, 6))
+        top.grid_columnconfigure(0, weight=1)
+
+        title_box = ctk.CTkFrame(top, fg_color="transparent")
+        title_box.grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(
+            title_box, text="Foto Tarihe Göre Ayır", text_color=COLOR_TEXT,
+            font=ctk.CTkFont(size=20, weight="bold")
+        ).pack(anchor="w")
+        ctk.CTkLabel(
+            title_box, text="Fotoğraf ve videoları çekim tarihine göre klasörlere ayırır",
+            text_color=COLOR_MUTED, font=ctk.CTkFont(size=12)
+        ).pack(anchor="w")
+
+        self.theme_btn = ctk.CTkButton(
+            top, text="☀️  Gündüz Modu", command=self.toggle_theme,
+            corner_radius=18, fg_color=COLOR_BTN2, hover_color=COLOR_BTN2_HOVER,
+            text_color=COLOR_TEXT, font=ctk.CTkFont(size=12, weight="bold"),
+            width=140, height=34,
         )
-        self.theme_btn = ttk.Button(frm_top, text="🌙  Gece Modu", command=self.toggle_theme)
-        self.theme_btn.pack(side="right")
+        self.theme_btn.grid(row=0, column=1, sticky="e")
 
-        frm_paths = ttk.LabelFrame(self.root, text="Klasörler")
-        frm_paths.pack(fill="x", **pad)
+        row = 1
 
-        ttk.Label(frm_paths, text="Kaynak klasör:").grid(row=0, column=0, sticky="w", **pad)
-        ttk.Entry(frm_paths, textvariable=self.source_var).grid(row=0, column=1, sticky="ew", **pad)
-        ttk.Button(frm_paths, text="Seç...", command=self.pick_source).grid(row=0, column=2, **pad)
+        # --- Klasörler kartı ---
+        card = Card(outer, "Klasörler")
+        card.grid(row=row, column=0, sticky="ew", padx=18, pady=8)
+        row += 1
 
-        ttk.Label(frm_paths, text="Hedef klasör:").grid(row=1, column=0, sticky="w", **pad)
-        ttk.Entry(frm_paths, textvariable=self.dest_var).grid(row=1, column=1, sticky="ew", **pad)
-        ttk.Button(frm_paths, text="Seç...", command=self.pick_dest).grid(row=1, column=2, **pad)
-        frm_paths.columnconfigure(1, weight=1)
+        r = card.next_row()
+        ctk.CTkLabel(card, text="Kaynak klasör", text_color=COLOR_MUTED).grid(
+            row=r, column=0, sticky="w", padx=16, pady=6)
+        ctk.CTkEntry(
+            card, textvariable=self.source_var, corner_radius=8,
+            fg_color=COLOR_INPUT, border_width=1, border_color=COLOR_CARD_BORDER,
+            text_color=COLOR_TEXT
+        ).grid(row=r, column=1, sticky="ew", padx=6, pady=6)
+        ctk.CTkButton(
+            card, text="Seç...", command=self.pick_source, width=90, corner_radius=8,
+            fg_color=COLOR_BTN2, hover_color=COLOR_BTN2_HOVER, text_color=COLOR_TEXT
+        ).grid(row=r, column=2, padx=(6, 16), pady=6)
 
-        ttk.Checkbutton(
-            frm_paths, text="Alt klasörleri de tara (recursive)",
-            variable=self.recurse_var
-        ).grid(row=2, column=0, columnspan=2, sticky="w", **pad)
+        r = card.next_row()
+        ctk.CTkLabel(card, text="Hedef klasör", text_color=COLOR_MUTED).grid(
+            row=r, column=0, sticky="w", padx=16, pady=6)
+        ctk.CTkEntry(
+            card, textvariable=self.dest_var, corner_radius=8,
+            fg_color=COLOR_INPUT, border_width=1, border_color=COLOR_CARD_BORDER,
+            text_color=COLOR_TEXT
+        ).grid(row=r, column=1, sticky="ew", padx=6, pady=6)
+        ctk.CTkButton(
+            card, text="Seç...", command=self.pick_dest, width=90, corner_radius=8,
+            fg_color=COLOR_BTN2, hover_color=COLOR_BTN2_HOVER, text_color=COLOR_TEXT
+        ).grid(row=r, column=2, padx=(6, 16), pady=6)
 
-        ttk.Checkbutton(
-            frm_paths,
-            text="Videoları da dahil et (mp4, mov, avi, mkv, m4v, 3gp, wmv, mts...) "
-                 "— videolarda EXIF olmadığından dosya tarihi kullanılır",
-            variable=self.include_video_var
-        ).grid(row=3, column=0, columnspan=3, sticky="w", **pad)
+        r = card.next_row()
+        ctk.CTkCheckBox(
+            card, text="Alt klasörleri de tara (recursive)", variable=self.recurse_var,
+            corner_radius=6, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color=COLOR_TEXT, border_color=COLOR_CARD_BORDER
+        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(2, 6))
 
-        # --- Tarih ayarları ---
-        frm_date = ttk.LabelFrame(self.root, text="Tarih Ayarları")
-        frm_date.pack(fill="x", **pad)
+        r = card.next_row()
+        ctk.CTkCheckBox(
+            card,
+            text="Videoları da dahil et (mp4, mov, avi, mkv, m4v, 3gp, wmv, mts...)",
+            variable=self.include_video_var,
+            corner_radius=6, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color=COLOR_TEXT, border_color=COLOR_CARD_BORDER
+        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 14))
 
-        ttk.Checkbutton(
-            frm_date, text="Önce EXIF çekim tarihini kullan (yoksa dosya tarihine düş)",
-            variable=self.use_exif_var
-        ).grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        # --- Tarih ayarları kartı ---
+        card = Card(outer, "Tarih Ayarları")
+        card.grid(row=row, column=0, sticky="ew", padx=18, pady=8)
+        row += 1
 
-        ttk.Label(frm_date, text="Klasör formatı:").grid(row=1, column=0, sticky="w", **pad)
-        preset_combo = ttk.Combobox(
-            frm_date, textvariable=self.preset_var, values=list(FORMAT_PRESETS.keys()),
-            state="readonly", width=40
+        r = card.next_row()
+        ctk.CTkCheckBox(
+            card, text="Önce EXIF çekim tarihini kullan (yoksa dosya tarihine düş)",
+            variable=self.use_exif_var,
+            corner_radius=6, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color=COLOR_TEXT, border_color=COLOR_CARD_BORDER
+        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(2, 10))
+
+        r = card.next_row()
+        ctk.CTkLabel(card, text="Klasör formatı", text_color=COLOR_MUTED).grid(
+            row=r, column=0, sticky="w", padx=16, pady=6)
+        self.preset_menu = ctk.CTkOptionMenu(
+            card, values=list(FORMAT_PRESETS.keys()), variable=self.preset_var,
+            command=self._on_preset_change, corner_radius=8,
+            fg_color=COLOR_INPUT, button_color=COLOR_ACCENT,
+            button_hover_color=COLOR_ACCENT_HOVER, text_color=COLOR_TEXT,
+            dropdown_fg_color=COLOR_CARD, dropdown_text_color=COLOR_TEXT,
         )
-        preset_combo.grid(row=1, column=1, columnspan=2, sticky="ew", **pad)
-        preset_combo.bind("<<ComboboxSelected>>", self._on_preset_change)
+        self.preset_menu.grid(row=r, column=1, columnspan=2, sticky="ew", padx=(6, 16), pady=6)
 
-        ttk.Label(frm_date, text="Özel format (strftime, / = alt klasör):").grid(
-            row=2, column=0, sticky="w", **pad
+        r = card.next_row()
+        ctk.CTkLabel(card, text="Özel format (strftime, / = alt klasör)", text_color=COLOR_MUTED).grid(
+            row=r, column=0, sticky="w", padx=16, pady=(6, 14))
+        self.custom_entry = ctk.CTkEntry(
+            card, textvariable=self.custom_format_var, corner_radius=8,
+            fg_color=COLOR_INPUT, border_width=1, border_color=COLOR_CARD_BORDER,
+            text_color=COLOR_TEXT
         )
-        self.custom_entry = ttk.Entry(frm_date, textvariable=self.custom_format_var)
-        self.custom_entry.grid(row=2, column=1, columnspan=2, sticky="ew", **pad)
-        self._on_preset_change()
-        frm_date.columnconfigure(1, weight=1)
+        self.custom_entry.grid(row=r, column=1, columnspan=2, sticky="ew", padx=(6, 16), pady=(6, 14))
+        self._on_preset_change(self.preset_var.get())
 
-        # --- Sıralama ---
-        frm_sort = ttk.LabelFrame(self.root, text="Sıralama")
-        frm_sort.pack(fill="x", **pad)
+        # --- Sıralama kartı ---
+        card = Card(outer, "Sıralama")
+        card.grid(row=row, column=0, sticky="ew", padx=18, pady=8)
+        row += 1
 
-        ttk.Label(frm_sort, text="İşlem/sıralama yönü:").grid(row=0, column=0, sticky="w", **pad)
-        ttk.Combobox(
-            frm_sort, textvariable=self.order_var,
-            values=["Eskiden yeniye", "Yeniden eskiye"],
-            state="readonly", width=20
-        ).grid(row=0, column=1, sticky="w", **pad)
+        r = card.next_row()
+        ctk.CTkLabel(card, text="İşlem/sıralama yönü", text_color=COLOR_MUTED).grid(
+            row=r, column=0, sticky="w", padx=16, pady=6)
+        ctk.CTkOptionMenu(
+            card, values=["Eskiden yeniye", "Yeniden eskiye"], variable=self.order_var,
+            corner_radius=8, fg_color=COLOR_INPUT, button_color=COLOR_ACCENT,
+            button_hover_color=COLOR_ACCENT_HOVER, text_color=COLOR_TEXT,
+            dropdown_fg_color=COLOR_CARD, dropdown_text_color=COLOR_TEXT, width=180,
+        ).grid(row=r, column=1, sticky="w", padx=6, pady=6)
 
-        ttk.Checkbutton(
-            frm_sort,
-            text="Klasör adlarının başına sıra numarası ekle (01 - ..., 02 - ...) "
-                 "— alfabetik sıralamayı garanti eder (örn. ay adı kullanırken)",
-            variable=self.prefix_var
-        ).grid(row=1, column=0, columnspan=2, sticky="w", **pad)
+        r = card.next_row()
+        ctk.CTkCheckBox(
+            card,
+            text="Klasör adlarının başına sıra numarası ekle (01 - ..., 02 - ...)",
+            variable=self.prefix_var,
+            corner_radius=6, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color=COLOR_TEXT, border_color=COLOR_CARD_BORDER
+        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(6, 14))
 
-        # --- İşlem seçenekleri ---
-        frm_opt = ttk.LabelFrame(self.root, text="İşlem")
-        frm_opt.pack(fill="x", **pad)
+        # --- İşlem kartı ---
+        card = Card(outer, "İşlem")
+        card.grid(row=row, column=0, sticky="ew", padx=18, pady=8)
+        row += 1
 
-        ttk.Radiobutton(
-            frm_opt, text="Kopyala (kaynak dosyalar kalır)",
-            variable=self.move_var, value=False
-        ).grid(row=0, column=0, sticky="w", **pad)
-        ttk.Radiobutton(
-            frm_opt, text="Taşı (kaynak dosyalar silinir)",
-            variable=self.move_var, value=True
-        ).grid(row=0, column=1, sticky="w", **pad)
-        ttk.Checkbutton(
-            frm_opt, text="Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)",
-            variable=self.dry_run_var
-        ).grid(row=1, column=0, columnspan=2, sticky="w", **pad)
+        r = card.next_row()
+        radio_box = ctk.CTkFrame(card, fg_color="transparent")
+        radio_box.grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=6)
+        ctk.CTkRadioButton(
+            radio_box, text="Kopyala (kaynak dosyalar kalır)",
+            variable=self.move_var, value=False,
+            fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER, text_color=COLOR_TEXT,
+            border_color=COLOR_CARD_BORDER,
+        ).pack(side="left", padx=(0, 24))
+        ctk.CTkRadioButton(
+            radio_box, text="Taşı (kaynak dosyalar silinir)",
+            variable=self.move_var, value=True,
+            fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER, text_color=COLOR_TEXT,
+            border_color=COLOR_CARD_BORDER,
+        ).pack(side="left")
 
-        # --- Başlat ---
-        frm_run = ttk.Frame(self.root)
-        frm_run.pack(fill="x", **pad)
-        self.run_btn = ttk.Button(frm_run, text="Başlat", command=self.start, style="Accent.TButton")
-        self.run_btn.pack(side="left", padx=8)
-        self.progress = ttk.Progressbar(frm_run, mode="determinate")
-        self.progress.pack(side="left", fill="x", expand=True, padx=8)
+        r = card.next_row()
+        ctk.CTkCheckBox(
+            card, text="Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)",
+            variable=self.dry_run_var,
+            corner_radius=6, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color=COLOR_TEXT, border_color=COLOR_CARD_BORDER
+        ).grid(row=r, column=0, columnspan=3, sticky="w", padx=16, pady=(6, 14))
 
-        # --- Log ---
-        frm_log = ttk.LabelFrame(self.root, text="Kayıt")
-        frm_log.pack(fill="both", expand=True, **pad)
-        self.log_box = scrolledtext.ScrolledText(frm_log, height=14, state="disabled", borderwidth=0)
-        self.log_box.pack(fill="both", expand=True)
+        # --- Başlat + ilerleme ---
+        run_card = ctk.CTkFrame(outer, fg_color="transparent")
+        run_card.grid(row=row, column=0, sticky="ew", padx=18, pady=8)
+        run_card.grid_columnconfigure(1, weight=1)
+        row += 1
 
-    def _on_preset_change(self, event=None):
+        self.run_btn = ctk.CTkButton(
+            run_card, text="Başlat", command=self.start, width=140, height=40,
+            corner_radius=10, fg_color=COLOR_ACCENT, hover_color=COLOR_ACCENT_HOVER,
+            text_color="#ffffff", font=ctk.CTkFont(size=14, weight="bold"),
+        )
+        self.run_btn.grid(row=0, column=0, padx=(0, 12))
+
+        self.progress = ctk.CTkProgressBar(
+            run_card, corner_radius=8, fg_color=COLOR_INPUT, progress_color=COLOR_ACCENT
+        )
+        self.progress.set(0)
+        self.progress.grid(row=0, column=1, sticky="ew")
+
+        # --- Log kartı ---
+        log_card = Card(outer, "Kayıt")
+        log_card.grid(row=row, column=0, sticky="ew", padx=18, pady=(8, 18))
+        log_card.grid_columnconfigure(0, weight=1)
+        row += 1
+
+        r = log_card.next_row()
+        self.log_box = ctk.CTkTextbox(
+            log_card, height=220, corner_radius=10, fg_color=COLOR_LOG_BG,
+            text_color=COLOR_TEXT, border_width=1, border_color=COLOR_CARD_BORDER,
+            wrap="word",
+        )
+        self.log_box.grid(row=r, column=0, columnspan=3, sticky="ew", padx=16, pady=(0, 16))
+        self.log_box.configure(state="disabled")
+
+    def _on_preset_change(self, value=None):
         is_custom = FORMAT_PRESETS[self.preset_var.get()] == "CUSTOM"
         self.custom_entry.configure(state="normal" if is_custom else "disabled")
         if not is_custom:
@@ -383,6 +434,7 @@ class PhotoSorterApp:
             return
 
         self.run_btn.configure(state="disabled")
+        self.progress.set(0)
         thread = threading.Thread(
             target=self._run, args=(source, dest, pattern), daemon=True
         )
@@ -401,25 +453,20 @@ class PhotoSorterApp:
 
         allowed_exts = IMAGE_EXTS | VIDEO_EXTS if include_video else IMAGE_EXTS
 
-        # Dosyaları topla
         files = []
-        if recurse:
-            it = source_p.rglob("*")
-        else:
-            it = source_p.glob("*")
+        it = source_p.rglob("*") if recurse else source_p.glob("*")
         for p in it:
             if p.is_file() and p.suffix.lower() in allowed_exts:
                 files.append(p)
 
         if not files:
             kind = "fotoğraf/video" if include_video else "fotoğraf"
-            self.root.after(0, lambda: self.log(f"Kaynak klasörde desteklenen bir {kind} bulunamadı."))
-            self.root.after(0, lambda: self.run_btn.configure(state="normal"))
+            self.after(0, lambda: self.log(f"Kaynak klasörde desteklenen bir {kind} bulunamadı."))
+            self.after(0, lambda: self.run_btn.configure(state="normal"))
             return
 
-        self.root.after(0, lambda: self.log(f"{len(files)} dosya bulundu, tarih bilgisi okunuyor..."))
+        self.after(0, lambda: self.log(f"{len(files)} dosya bulundu, tarih bilgisi okunuyor..."))
 
-        # Her dosya için tarih hesapla
         dated_files = []
         for p in files:
             dt = get_photo_date(p, use_exif)
@@ -427,7 +474,6 @@ class PhotoSorterApp:
 
         dated_files.sort(key=lambda t: t[0], reverse=reverse)
 
-        # Sıra numarası isteniyorsa, klasör isimlerini tarih sırasına göre eşle
         folder_order = []
         seen = set()
         for dt, _p in dated_files:
@@ -442,20 +488,17 @@ class PhotoSorterApp:
                 prefix_map[name] = f"{str(i).zfill(width)} - {name}"
 
         total = len(dated_files)
-        self.root.after(0, lambda: self.progress.configure(maximum=total, value=0))
-
         ok, errors = 0, 0
         for i, (dt, p) in enumerate(dated_files, start=1):
             try:
                 folder_name = format_folder_name(dt, pattern)
                 if add_prefix:
                     folder_name = prefix_map[folder_name]
-                # "/" içeren format alt klasörler oluşturur
                 target_dir = dest_p.joinpath(*folder_name.split("/"))
                 target_path = target_dir / p.name
 
                 if dry_run:
-                    self.root.after(0, lambda p=p, t=target_dir: self.log(f"[ÖNİZLEME] {p.name} -> {t}"))
+                    self.after(0, lambda p=p, t=target_dir: self.log(f"[ÖNİZLEME] {p.name} -> {t}"))
                 else:
                     target_dir.mkdir(parents=True, exist_ok=True)
                     target_path = unique_destination(target_path)
@@ -463,13 +506,13 @@ class PhotoSorterApp:
                         shutil.move(str(p), str(target_path))
                     else:
                         shutil.copy2(str(p), str(target_path))
-                    self.root.after(0, lambda p=p, t=target_path: self.log(f"{p.name} -> {t}"))
+                    self.after(0, lambda p=p, t=target_path: self.log(f"{p.name} -> {t}"))
                 ok += 1
             except Exception as e:
                 errors += 1
-                self.root.after(0, lambda p=p, e=e: self.log(f"HATA ({p.name}): {e}"))
+                self.after(0, lambda p=p, e=e: self.log(f"HATA ({p.name}): {e}"))
 
-            self.root.after(0, lambda v=i: self.progress.configure(value=v))
+            self.after(0, lambda v=i: self.progress.set(v / total))
 
         def finish():
             self.log(f"\nTamamlandı. Başarılı: {ok}, Hatalı: {errors}.")
@@ -477,10 +520,9 @@ class PhotoSorterApp:
                 self.log("(Önizleme modundaydı, hiçbir dosya taşınmadı/kopyalanmadı.)")
             self.run_btn.configure(state="normal")
 
-        self.root.after(0, finish)
+        self.after(0, finish)
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = PhotoSorterApp(root)
-    root.mainloop()
+    app = PhotoSorterApp()
+    app.mainloop()

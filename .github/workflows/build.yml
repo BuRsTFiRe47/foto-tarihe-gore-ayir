@@ -25,11 +25,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Bağımlılıkları kur
-        run: pip install pillow customtkinter pyinstaller
+        run: pip install PySide6 pillow pyinstaller
       - name: exe derle
         run: >
           pyinstaller --onefile --noconsole
-          --collect-all customtkinter
           --name "FotoTariheGoreAyir"
           foto_tarihe_gore_ayir.py
       - uses: actions/upload-artifact@v4
@@ -46,11 +45,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Bağımlılıkları kur
-        run: pip install pillow customtkinter pyinstaller
+        run: pip install PySide6 pillow pyinstaller
       - name: .app derle
         run: >
           pyinstaller --windowed
-          --collect-all customtkinter
           --name "FotoTariheGoreAyir"
           foto_tarihe_gore_ayir.py
       - name: .app dosyasını ziple
@@ -66,10 +64,10 @@ jobs:
     # Sadece bir "v1.0.0" gibi tag push edildiğinde, iki platformu da
     # bir GitHub Release'e otomatik ekler.
     if: startsWith(github.ref, 'refs/tags/v')
-    permissions:
-      contents: write   # Release oluşturabilmek için yazma izni şart
     needs: [build-windows, build-macos-arm64]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Release oluşturabilmek için yazma izni şart
     steps:
       - uses: actions/download-artifact@v4
         with:

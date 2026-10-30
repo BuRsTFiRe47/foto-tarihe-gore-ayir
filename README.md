@@ -1,104 +1,129 @@
 # Foto Tarihe Göre Ayır 📷🗂️
 
-Bir klasördeki fotoğrafları (ve isteğe bağlı olarak videoları) çekim tarihine
-(EXIF) veya dosya tarihine göre otomatik olarak klasörlere ayıran, gece/gündüz
-temalı basit bir masaüstü uygulaması.
+*(English below)*
 
-![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue)
+Bir klasördeki fotoğrafları (ve isteğe bağlı olarak videoları) çekim tarihine (EXIF)
+veya dosya tarihine göre otomatik olarak klasörlere ayıran, gece/gündüz temalı basit bir
+masaüstü uygulaması. **PySide6 (Qt)** ile yazılmıştır.
+
+> Fotoğraf dışındaki türleri (3D baskı dosyaları, belgeler, arşivler… veya tüm dosyalar)
+> de ayırmak isterseniz genel amaçlı fork'a bakın:
+> [**Dosya Türüne Göre Ayır**](https://github.com/BuRsTFiRe47/dosya-turune-gore-ayir)
+
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
+![pyside6](https://img.shields.io/badge/GUI-PySide6-41cd52)
 
-<img src="docs/screenshot-dark.png" width="600" alt="Uygulama görünümü (koyu mod)">
-
-*(Not: Yukarıdaki görüntü Linux üzerinde alınmıştır; Windows ve macOS'ta yazı
-tipleri sisteminizin kendi fontuyla — Segoe UI / San Francisco — daha
-akıcı görünür.)*
+<p>
+  <img src="docs/screenshot-dark.png" width="48%" alt="Koyu mod / Dark mode">
+  <img src="docs/screenshot-light.png" width="48%" alt="Açık mod / Light mode">
+</p>
 
 ## Özellikler
 
-- 📅 EXIF çekim tarihi veya dosya değiştirilme tarihine göre ayırma
-- 🎞️ Fotoğrafların yanı sıra video dosyalarını da dahil etme
-- 🗓️ Hazır tarih formatları (Yıl/Ay/Gün, Yıl-Ay, sadece Yıl, Türkçe ay adı...)
-  veya kendi `strftime` formatınızı yazma
-- 📁 `/` ile alt klasör oluşturma desteği (örn. `%Y/%m` → 2026/08)
-- 🔢 Klasör adlarına sıra numarası ekleyerek sıralamayı garanti altına alma
-- ↔️ Kopyala veya taşı seçeneği
-- 👀 Önizleme (dry-run) modu — hiçbir dosyayı değiştirmeden sonucu görme
-- 🌙☀️ Gece / Gündüz modu
+- 📅 EXIF çekim tarihi (yoksa dosya değiştirilme tarihi) ile ayırma
+- 🎞️ İsteğe bağlı video dahil etme (videolarda EXIF olmadığından dosya tarihi kullanılır)
+- 🗓️ Hazır tarih formatları (Yıl/Ay/Gün, Yıl-Ay, sadece Yıl, Türkçe ay adı…) veya kendi
+  `strftime` formatınız — altında **canlı örnek klasör adı** görünür
+- 📁 `/` ile alt klasör oluşturma (örn. `%Y/%m` → `2026/08`)
+- 🔢 Klasör adlarına sıra numarası ekleme (alfabetik sıralamayı garanti eder)
+- ↔️ Kopyala veya taşı (taşırken onay sorar)
+- 👀 Önizleme (dry-run) modu, ⏹️ **Durdur** düğmesi, 🧲 klasörü sürükleyip bırakma
+- 🔁 Tekrar çalıştırmak güvenlidir: hedefte zaten aynısı olan dosyalar atlanır, hedef klasör
+  tekrar taranmaz (`(1)` kopyaları oluşmaz)
+- 🌙☀️ Gece / Gündüz modu (varsayılan: gece, seçiminiz hatırlanır)
 
 ## İndirme (kurulum gerektirmez)
 
-En güncel derlenmiş sürümleri **[Releases](../../releases)** sayfasından
-indirebilirsiniz:
+**[Releases](https://github.com/BuRsTFiRe47/foto-tarihe-gore-ayir/releases)** sayfasından:
 
 - **Windows** → `FotoTariheGoreAyir.exe`
-- **Mac (Apple Silicon / M1, M2, M3, M4...)** → `FotoTariheGoreAyir-macOS-AppleSilicon.zip`
+- **Mac (Apple Silicon / M1, M2, M3, M4…)** → `FotoTariheGoreAyir-macOS-AppleSilicon.zip`
 
-> Not: Intel Mac (x86_64) için ayrı bir derleme sunulmuyor — Apple ve GitHub
-> Intel mimarisini kademeli olarak devre dışı bırakıyor. Eski bir Intel
-> Mac'iniz varsa "Kaynaktan çalıştırma" bölümündeki adımlarla uygulamayı
-> doğrudan çalıştırabilirsiniz.
+> Not: Uygulama Qt kütüphanelerini içerdiği için dosya boyutu büyüktür (yaklaşık 100 MB).
+> Intel Mac için ayrı derleme yoktur; "Kaynaktan çalıştırma" ile çalıştırabilirsiniz.
 
-Bu dosyalar benim bilgisayarımda değil, **GitHub Actions üzerinde bu
-repodaki kaynak koddan otomatik olarak** derlenir. Derleme adımlarını ve
-günlüklerini [Actions](../../actions) sekmesinden herkes görebilir —
-yani "kaynağı belirsiz bir exe" değildir.
+Dosyalar **GitHub Actions üzerinde bu repodaki kaynak koddan otomatik olarak** derlenir —
+adımları ve günlükleri [Actions](https://github.com/BuRsTFiRe47/foto-tarihe-gore-ayir/actions)
+sekmesinden herkes görebilir.
 
-### macOS'ta ilk açılış uyarısı
-
-macOS, imzasız uygulamalarda "geliştirici doğrulanamadı" uyarısı gösterir.
-Bunu aşmak için:
-1. `.zip` dosyasını açın, `FotoTariheGoreAyir.app` dosyasına **sağ tıklayıp
-   "Aç"** deyin (çift tıklamayın).
-2. Çıkan uyarıda tekrar **"Aç"** deyin. Bu işlemi sadece ilk açılışta
-   yapmanız yeterli.
-
-### Windows'ta ilk açılış uyarısı
-
-Windows SmartScreen "Windows bu uygulamayı korudu" uyarısı gösterebilir.
-**"Ek bilgi"** → **"Yine de çalıştır"** ile devam edebilirsiniz.
+**macOS ilk açılış:** `.zip` dosyasını açın, `FotoTariheGoreAyir.app` üzerinde **sağ tık → Aç**,
+çıkan uyarıda tekrar **Aç** deyin.
+**Windows ilk açılış:** SmartScreen uyarısında **Ek bilgi → Yine de çalıştır**.
 
 ## Kaynaktan çalıştırma
 
 ```bash
-pip install pillow customtkinter
+pip install PySide6 pillow
 python foto_tarihe_gore_ayir.py
 ```
 
-## Kendi exe/app dosyanızı derlemek isterseniz
-
-### Windows
-
-```bat
-pip install pillow customtkinter pyinstaller
-pyinstaller --onefile --noconsole --collect-all customtkinter --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
-```
-
-### macOS
+## Kendi exe/app dosyanızı derlemek
 
 ```bash
-pip3 install pillow customtkinter pyinstaller
-pyinstaller --windowed --collect-all customtkinter --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+pip install PySide6 pillow pyinstaller
+
+# Windows
+pyinstaller --onefile --noconsole --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+
+# macOS
+pyinstaller --windowed --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
 ```
 
-> Not: `--collect-all customtkinter` bayrağı şart — CustomTkinter'ın yuvarlak
-> köşe/tema görselleri için kullandığı ek veri dosyalarını da exe/app içine
-> gömer. Bu bayrak olmadan derlenen exe açılışta hata verir.
+> PyInstaller çapraz derleme yapamaz; her platformun paketini o platformda (ya da bu
+> repodaki GitHub Actions ile) derlemeniz gerekir.
 
-> Not: PyInstaller derlemeyi yaptığı işletim sistemi ve mimari için üretir
-> (cross-compile yapamaz). Yani Apple Silicon (M serisi) bir `.app` için
-> derlemeyi bir Apple Silicon Mac'te yapmanız gerekir — bu repodaki GitHub
-> Actions workflow'u bunu sizin için otomatik olarak yapar.
-
-## Yeni bir sürüm yayınlamak (Release oluşturmak)
+## Yeni sürüm yayınlamak
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Bu komut GitHub Actions'ı tetikler; Windows exe ve Apple Silicon için macOS
-`.app` dosyası otomatik derlenip bir GitHub Release'e eklenir.
+Windows exe ve Apple Silicon `.app` otomatik derlenip bir GitHub Release'e eklenir.
 
 ## Lisans
 
 MIT — bkz. [LICENSE](LICENSE)
+
+---
+
+## English
+
+A dark/light-themed desktop app (built with **PySide6 / Qt**) that sorts the photos
+(optionally videos too) of a folder into date-based folders using the EXIF capture date
+or the file date.
+
+Need other file types (3D-print files, documents, archives… or everything)? See the
+general-purpose fork: [**Dosya Türüne Göre Ayır**](https://github.com/BuRsTFiRe47/dosya-turune-gore-ayir).
+
+### Features
+
+- 📅 EXIF capture date (falls back to file modified date)
+- 🎞️ Optional videos (no EXIF, so the file date is used)
+- 🗓️ Built-in date-folder formats or a custom `strftime` pattern, with a **live example
+  folder name**; nested subfolders via `/` (e.g. `%Y/%m`)
+- 🔢 Optional sequence-number prefix on folder names
+- ↔️ Copy or move (asks for confirmation), 👀 dry-run preview, ⏹️ Stop button,
+  🧲 drag & drop folders
+- 🔁 Safe to re-run: already-present files are skipped, the destination isn't re-scanned
+- 🌙☀️ Dark / Light mode (defaults to dark, remembered)
+
+### Download
+
+**[Releases](https://github.com/BuRsTFiRe47/foto-tarihe-gore-ayir/releases)**: Windows
+`FotoTariheGoreAyir.exe`, Mac (Apple Silicon) `FotoTariheGoreAyir-macOS-AppleSilicon.zip`.
+Built by **GitHub Actions straight from this repo's source**; logs are public under
+[Actions](https://github.com/BuRsTFiRe47/foto-tarihe-gore-ayir/actions). Files are large
+(~100 MB) because they bundle Qt.
+
+### Run from source
+
+```bash
+pip install PySide6 pillow
+python foto_tarihe_gore_ayir.py
+```
+
+### License
+
+MIT — see [LICENSE](LICENSE)

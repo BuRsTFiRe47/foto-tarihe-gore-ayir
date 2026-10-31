@@ -19,6 +19,29 @@ masaüstü uygulaması. **PySide6 (Qt)** ile yazılmıştır.
   <img src="docs/screenshot-light.png" width="48%" alt="Açık mod / Light mode">
 </p>
 
+## İki sekme
+
+**1) Tarihe Göre Ayır** — tarih formatına göre klasörlere böler (aşağıdaki özellikler).
+
+**2) Adlandır ve Arşivle** — arşiv düzeni isteyenler için:
+
+- 🏷️ Dosyaları `yıl-aygün_saatdakikasaniye` adıyla yeniden adlandırır
+  (örn. `2023-0710_142530.jpg`)
+- 📁 `yıl-aygün_cihaz-yer` klasörlerine koyar (örn. `2023-0710_op6-efes`);
+  cihaz adı ve yer/konu kutularından belirlenir
+- 🔎 EXIF tarihi yoksa **dosya adından** okur (`IMG20261029141449.jpg`,
+  `VID20261029224307.mp4`, `PXL_…`, `2026-10-29 14.14.49` …)
+- 🎬 Video dosya içi tarihleri UTC/GMT kayıtlıdır: seçtiğiniz **saat dilimine** çevirir
+  (Türkiye için UTC+3)
+- ✍️ Tarih hiç bulunamazsa dosya tarihini veya elle girdiğiniz **yaklaşık tarihi** kullanır
+  ve bulunan tarihi JPEG'in **EXIF'ine yazar** (yeniden sıkıştırma yok)
+- 👀 Önizleme, 🔁 tekrar çalıştırma güvenliği, kopyala/taşı burada da geçerli
+
+<p>
+  <img src="docs/screenshot-archive-dark.png" width="48%" alt="Adlandır ve Arşivle / Dark">
+  <img src="docs/screenshot-archive-light.png" width="48%" alt="Adlandır ve Arşivle / Light">
+</p>
+
 ## Özellikler
 
 - 📅 EXIF çekim tarihi (yoksa dosya değiştirilme tarihi) ile ayırma
@@ -54,14 +77,14 @@ sekmesinden herkes görebilir.
 ## Kaynaktan çalıştırma
 
 ```bash
-pip install PySide6 pillow
+pip install PySide6 pillow piexif
 python foto_tarihe_gore_ayir.py
 ```
 
 ## Kendi exe/app dosyanızı derlemek
 
 ```bash
-pip install PySide6 pillow pyinstaller
+pip install PySide6 pillow piexif pyinstaller
 
 # Windows
 pyinstaller --onefile --noconsole --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
@@ -97,6 +120,16 @@ or the file date.
 Need other file types (3D-print files, documents, archives… or everything)? See the
 general-purpose fork: [**Dosya Türüne Göre Ayır**](https://github.com/BuRsTFiRe47/dosya-turune-gore-ayir).
 
+### Two tabs
+
+The second tab, **Rename & Archive**, renames files to `year-monthday_hhmmss`
+(e.g. `2023-0710_142530.jpg`) and files them into `year-monthday_device-place`
+folders (e.g. `2023-0710_op6-efes`). If EXIF is missing the date is parsed from the file
+name (`IMG20261029141449.jpg`, `VID20261029224307.mp4`, …); video dates (stored in UTC)
+are converted to your time zone (UTC+3 for Turkey); and if nothing is found, the file date
+or a date you enter is used as an approximate date and can be written into the JPEG's EXIF
+without re-encoding.
+
 ### Features
 
 - 📅 EXIF capture date (falls back to file modified date)
@@ -120,7 +153,7 @@ Built by **GitHub Actions straight from this repo's source**; logs are public un
 ### Run from source
 
 ```bash
-pip install PySide6 pillow
+pip install PySide6 pillow piexif
 python foto_tarihe_gore_ayir.py
 ```
 

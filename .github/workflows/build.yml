@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Bağımlılıkları kur
-        run: pip install PySide6 pillow pyinstaller
+        run: pip install PySide6 pillow piexif pyinstaller
       - name: exe derle
         run: >
           pyinstaller --onefile --noconsole
@@ -45,7 +45,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Bağımlılıkları kur
-        run: pip install PySide6 pillow pyinstaller
+        run: pip install PySide6 pillow piexif pyinstaller
       - name: .app derle
         run: >
           pyinstaller --windowed

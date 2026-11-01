@@ -4,7 +4,7 @@
 
 Bir klasördeki fotoğrafları (ve isteğe bağlı olarak videoları) çekim tarihine (EXIF)
 veya dosya tarihine göre otomatik olarak klasörlere ayıran, gece/gündüz temalı basit bir
-masaüstü uygulaması. **PySide6 (Qt)** ile yazılmıştır.
+masaüstü uygulaması. **PySide6 (Qt)** ile yazılmıştır. Tema ve özel bileşenler `breeze.py` dosyasındadır.
 
 > Fotoğraf dışındaki türleri (3D baskı dosyaları, belgeler, arşivler… veya tüm dosyalar)
 > de ayırmak isterseniz genel amaçlı fork'a bakın:
@@ -54,7 +54,8 @@ masaüstü uygulaması. **PySide6 (Qt)** ile yazılmıştır.
 - 👀 Önizleme (dry-run) modu, ⏹️ **Durdur** düğmesi, 🧲 klasörü sürükleyip bırakma
 - 🔁 Tekrar çalıştırmak güvenlidir: hedefte zaten aynısı olan dosyalar atlanır, hedef klasör
   tekrar taranmaz (`(1)` kopyaları oluşmaz)
-- 🌙☀️ Gece / Gündüz modu (varsayılan: gece, seçiminiz hatırlanır)
+- 🌙☀️ KDE **Breeze** esinli koyu/açık tema, sol menüden sayfa geçişi (varsayılan: koyu, seçiminiz hatırlanır)
+- 🕘 Klasör alanlarında **son kullanılanlar** açılır listesi
 
 ## İndirme (kurulum gerektirmez)
 
@@ -140,7 +141,8 @@ without re-encoding.
 - ↔️ Copy or move (asks for confirmation), 👀 dry-run preview, ⏹️ Stop button,
   🧲 drag & drop folders
 - 🔁 Safe to re-run: already-present files are skipped, the destination isn't re-scanned
-- 🌙☀️ Dark / Light mode (defaults to dark, remembered)
+- 🌙☀️ KDE **Breeze**-inspired dark/light theme with a sidebar (defaults to dark, remembered)
+- 🕘 Recent-folders dropdown on the folder fields
 
 ### Download
 

@@ -45,7 +45,7 @@ from PySide6.QtGui import (
     QColor, QFont, QPainter, QPainterPath, QPalette, QPen,
 )
 from PySide6.QtWidgets import (
-    QAbstractSpinBox, QApplication, QButtonGroup, QCheckBox, QComboBox, QDateTimeEdit,
+    QAbstractSpinBox, QApplication, QStackedWidget, QButtonGroup, QCheckBox, QComboBox, QDateTimeEdit,
     QFileDialog, QFrame,
     QGridLayout, QHBoxLayout, QLabel, QLineEdit, QListView, QMainWindow,
     QMessageBox, QPlainTextEdit, QProgressBar, QPushButton, QRadioButton,
@@ -63,6 +63,10 @@ try:
     PIEXIF_AVAILABLE = True
 except ImportError:
     PIEXIF_AVAILABLE = False
+
+from breeze import (  # ortak Breeze teması (koyu arduvaz + mercan vurgu)
+    PALETTES, PathField, Check, Combo, Radio, build_palette, build_qss,
+)
 
 APP_TITLE = "Foto Tarihe Göre Ayır"
 APP_VERSION = "1.6.0"
@@ -94,146 +98,6 @@ TR_MONTHS = {
     1: "Ocak", 2: "Şubat", 3: "Mart", 4: "Nisan", 5: "Mayıs", 6: "Haziran",
     7: "Temmuz", 8: "Ağustos", 9: "Eylül", 10: "Ekim", 11: "Kasım", 12: "Aralık",
 }
-
-# ---------------------------------------------------------------------------
-# Temalar / Themes
-# ---------------------------------------------------------------------------
-THEMES = {
-    "dark": {
-        "bg": "#100f17", "card": "#1c1b24", "border": "#2c2b38",
-        "border_strong": "#4a4960", "input": "#232230", "text": "#f2f2f5",
-        "muted": "#9a99a8", "disabled": "#5f5e6e", "accent": "#4c8bf5",
-        "accent_hover": "#3d76d6", "btn": "#2a2935", "btn_hover": "#34333f",
-        "log": "#15141b",
-    },
-    "light": {
-        "bg": "#f5f5f8", "card": "#ffffff", "border": "#e4e4ec",
-        "border_strong": "#b9bbc6", "input": "#eef0f4", "text": "#1c1c1e",
-        "muted": "#6b6b74", "disabled": "#a3a4ae", "accent": "#3468e0",
-        "accent_hover": "#2a55bd", "btn": "#e7e9ee", "btn_hover": "#dadce3",
-        "log": "#fbfbfd",
-    },
-}
-
-
-class Theme:
-    name = "dark"
-
-    @classmethod
-    def c(cls) -> dict:
-        return THEMES[cls.name]
-
-
-QSS_TEMPLATE = """
-QMainWindow, QWidget#root, QScrollArea, QScrollArea > QWidget > QWidget#body {
-    background: @bg@;
-}
-QScrollArea { border: none; }
-QLabel { background: transparent; color: @text@; }
-QLabel#title { font-size: 21px; font-weight: 700; }
-QLabel#cardTitle { font-size: 14px; font-weight: 700; }
-QLabel#muted { color: @muted@; }
-QLabel#hint { color: @muted@; font-size: 12px; }
-
-QFrame#card {
-    background: @card@; border: 1px solid @border@; border-radius: 14px;
-}
-QFrame#bar {
-    background: @card@; border: none; border-top: 1px solid @border@;
-}
-
-QLineEdit, QDateTimeEdit {
-    background: @input@; color: @text@; border: 1px solid @border@;
-    border-radius: 8px; padding: 7px 10px;
-    selection-background-color: @accent@; selection-color: #ffffff;
-}
-QLineEdit:focus, QDateTimeEdit:focus { border: 1px solid @accent@; }
-QLineEdit:disabled, QDateTimeEdit:disabled { color: @disabled@; }
-
-QTabWidget::pane { border: none; background: transparent; }
-QTabBar { background: transparent; }
-QTabBar::tab {
-    background: transparent; color: @muted@; padding: 8px 18px; margin: 0 6px 10px 0;
-    border: 1px solid transparent; border-radius: 10px; font-weight: 600;
-}
-QTabBar::tab:selected { background: @card@; color: @text@; border: 1px solid @border@; }
-QTabBar::tab:hover:!selected { color: @text@; }
-QTabBar::tab:disabled { color: @disabled@; }
-
-QComboBox {
-    background: @input@; color: @text@; border: 1px solid @border@;
-    border-radius: 8px; padding: 7px 34px 7px 10px;
-}
-QComboBox:hover, QComboBox:focus { border: 1px solid @accent@; }
-QComboBox::drop-down { border: none; width: 30px; }
-QComboBox::down-arrow { image: none; }
-QComboBox QAbstractItemView {
-    background: @card@; color: @text@; border: 1px solid @border@;
-    border-radius: 8px; padding: 4px; outline: 0;
-    selection-background-color: @accent@; selection-color: #ffffff;
-}
-
-QPushButton {
-    background: @btn@; color: @text@; border: none; border-radius: 8px;
-    padding: 8px 16px;
-}
-QPushButton:hover { background: @btn_hover@; }
-QPushButton:disabled { color: @disabled@; }
-QPushButton#primary {
-    background: @accent@; color: #ffffff; font-weight: 700;
-    font-size: 14px; border-radius: 10px; padding: 10px 30px;
-}
-QPushButton#primary:hover { background: @accent_hover@; }
-QPushButton#primary:disabled { background: @border_strong@; color: #ffffff; }
-QPushButton#theme { border-radius: 16px; padding: 0 18px; font-weight: 600; }
-
-QProgressBar {
-    background: @input@; border: none; border-radius: 6px;
-    min-height: 12px; max-height: 12px;
-}
-QProgressBar::chunk { background: @accent@; border-radius: 6px; }
-
-QPlainTextEdit#log {
-    background: @log@; color: @text@; border: 1px solid @border@;
-    border-radius: 10px; padding: 8px;
-    selection-background-color: @accent@; selection-color: #ffffff;
-}
-
-QScrollBar:vertical { background: transparent; width: 12px; margin: 2px; }
-QScrollBar::handle:vertical {
-    background: @border_strong@; border-radius: 4px; min-height: 36px;
-}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }
-QToolTip {
-    background: @card@; color: @text@; border: 1px solid @border@; padding: 4px;
-}
-"""
-
-
-def build_qss(t: dict) -> str:
-    qss = QSS_TEMPLATE
-    for key, value in t.items():
-        qss = qss.replace(f"@{key}@", value)
-    return qss
-
-
-def build_palette(t: dict) -> QPalette:
-    pal = QPalette()
-    roles = {
-        QPalette.Window: t["bg"], QPalette.WindowText: t["text"],
-        QPalette.Base: t["input"], QPalette.AlternateBase: t["card"],
-        QPalette.Text: t["text"], QPalette.Button: t["btn"],
-        QPalette.ButtonText: t["text"], QPalette.Highlight: t["accent"],
-        QPalette.HighlightedText: "#ffffff", QPalette.ToolTipBase: t["card"],
-        QPalette.ToolTipText: t["text"], QPalette.PlaceholderText: t["muted"],
-    }
-    for role, color in roles.items():
-        pal.setColor(role, QColor(color))
-    for role in (QPalette.WindowText, QPalette.Text, QPalette.ButtonText):
-        pal.setColor(QPalette.Disabled, role, QColor(t["disabled"]))
-    return pal
-
 
 # ---------------------------------------------------------------------------
 # Çekirdek mantık / Core logic
@@ -785,140 +649,6 @@ class ArchiveWorker(QObject):
 # ---------------------------------------------------------------------------
 # Özel bileşenler / Custom widgets
 # ---------------------------------------------------------------------------
-class ModernCheckBox(QCheckBox):
-    SIZE = 20
-
-    def __init__(self, text: str, parent=None):
-        super().__init__(text, parent)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setAttribute(Qt.WA_Hover, True)
-        self.setToolTip(text)
-
-    def sizeHint(self):
-        fm = self.fontMetrics()
-        return QSize(self.SIZE + 12 + fm.horizontalAdvance(self.text()) + 6,
-                     max(self.SIZE, fm.height()) + 8)
-
-    def minimumSizeHint(self):
-        return QSize(self.SIZE + 60, self.sizeHint().height())
-
-    def hitButton(self, pos):
-        return self.rect().contains(pos)
-
-    def paintEvent(self, _event):
-        t = Theme.c()
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        box = QRectF(1.5, (self.height() - self.SIZE) / 2, self.SIZE, self.SIZE)
-        enabled = self.isEnabled()
-        if self.isChecked():
-            p.setPen(Qt.NoPen)
-            p.setBrush(QColor(t["accent"] if enabled else t["border_strong"]))
-        else:
-            hot = enabled and (self.underMouse() or self.hasFocus())
-            p.setPen(QPen(QColor(t["accent"] if hot else t["border_strong"]), 1.5))
-            p.setBrush(QColor(t["input"]))
-        p.drawRoundedRect(box, 6, 6)
-        if self.isChecked():
-            pen = QPen(QColor("#ffffff"), 2.2)
-            pen.setCapStyle(Qt.RoundCap)
-            pen.setJoinStyle(Qt.RoundJoin)
-            p.setPen(pen)
-            p.setBrush(Qt.NoBrush)
-            path = QPainterPath()
-            path.moveTo(box.left() + 5.2, box.top() + 10.4)
-            path.lineTo(box.left() + 8.6, box.top() + 13.8)
-            path.lineTo(box.left() + 14.8, box.top() + 6.6)
-            p.drawPath(path)
-        p.setPen(QColor(t["text"] if enabled else t["disabled"]))
-        text_w = self.width() - self.SIZE - 12
-        text = self.fontMetrics().elidedText(self.text(), Qt.ElideRight, max(text_w, 10))
-        p.drawText(QRectF(self.SIZE + 12, 0, text_w, self.height()),
-                   int(Qt.AlignVCenter | Qt.AlignLeft), text)
-
-
-class ModernRadio(QRadioButton):
-    SIZE = 20
-
-    def __init__(self, text: str, parent=None):
-        super().__init__(text, parent)
-        self.setCursor(Qt.PointingHandCursor)
-        self.setAttribute(Qt.WA_Hover, True)
-
-    def sizeHint(self):
-        fm = self.fontMetrics()
-        return QSize(self.SIZE + 12 + fm.horizontalAdvance(self.text()) + 6,
-                     max(self.SIZE, fm.height()) + 8)
-
-    def hitButton(self, pos):
-        return self.rect().contains(pos)
-
-    def paintEvent(self, _event):
-        t = Theme.c()
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        box = QRectF(1.5, (self.height() - self.SIZE) / 2, self.SIZE, self.SIZE)
-        if self.isChecked():
-            p.setPen(Qt.NoPen)
-            p.setBrush(QColor(t["accent"]))
-            p.drawEllipse(box)
-            p.setBrush(QColor("#ffffff"))
-            p.drawEllipse(box.center(), 4.2, 4.2)
-        else:
-            hot = self.underMouse() or self.hasFocus()
-            p.setPen(QPen(QColor(t["accent"] if hot else t["border_strong"]), 1.5))
-            p.setBrush(QColor(t["input"]))
-            p.drawEllipse(box)
-        p.setPen(QColor(t["text"]))
-        p.drawText(QRectF(self.SIZE + 12, 0, self.width() - self.SIZE - 12, self.height()),
-                   int(Qt.AlignVCenter | Qt.AlignLeft), self.text())
-
-
-class ChevronCombo(QComboBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setView(QListView())
-        self.setMaxVisibleItems(12)
-        self.setCursor(Qt.PointingHandCursor)
-
-    def wheelEvent(self, event):  # kaydırırken yanlışlıkla seçim değişmesin
-        event.ignore()
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        pen = QPen(QColor(Theme.c()["muted"]), 1.8)
-        pen.setCapStyle(Qt.RoundCap)
-        pen.setJoinStyle(Qt.RoundJoin)
-        p.setPen(pen)
-        cx, cy = self.width() - 18, self.height() / 2
-        path = QPainterPath()
-        path.moveTo(cx - 4, cy - 2)
-        path.lineTo(cx, cy + 2)
-        path.lineTo(cx + 4, cy - 2)
-        p.drawPath(path)
-
-
-class FolderLineEdit(QLineEdit):
-    """Klasör (veya dosya) sürükleyip bırakmayı destekleyen giriş kutusu."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAcceptDrops(True)
-        self.setPlaceholderText("Seçin veya klasörü buraya sürükleyin…")
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        urls = event.mimeData().urls()
-        if urls:
-            path = Path(urls[0].toLocalFile())
-            self.setText(str(path if path.is_dir() else path.parent))
-
-
 class Card(QFrame):
     LABEL_W = 130
 
@@ -964,12 +694,12 @@ class MainWindow(QMainWindow):
         self._running = False
 
         self.setWindowTitle(f"{APP_TITLE}  v{APP_VERSION}")
-        self.resize(820, 900)
-        self.setMinimumSize(700, 560)
+        self.resize(980, 900)
+        self.setMinimumSize(860, 600)
 
         self._build_ui()
         saved = self.settings.value("theme", "dark")
-        self.apply_theme(saved if saved in THEMES else "dark")
+        self.apply_theme(saved if saved in PALETTES else "dark")
 
         if not PIL_AVAILABLE:
             self.append_log("UYARI: Pillow kurulu değil, EXIF okunamayacak; dosya tarihi kullanılacak. "
@@ -977,89 +707,63 @@ class MainWindow(QMainWindow):
 
     # ----- tema -----
     def apply_theme(self, name: str):
-        Theme.name = name
-        t = Theme.c()
+        name = name if name in PALETTES else "dark"
         app = QApplication.instance()
-        app.setPalette(build_palette(t))
-        app.setStyleSheet(build_qss(t))
-        self.theme_btn.setText("☀  Gündüz Modu" if name == "dark" else "☾  Gece Modu")
+        app.setStyleSheet(build_qss(name))   # Breeze paleti (koyu/açık)
+        app.setPalette(build_palette())
+        self.theme_dark.setChecked(name == "dark")
+        self.theme_light.setChecked(name == "light")
         self.settings.setValue("theme", name)
         for w in self.findChildren(QWidget):
             w.update()
 
-    def toggle_theme(self):
-        self.apply_theme("light" if Theme.name == "dark" else "dark")
-
-    # ----- arayüz -----
-    def _build_ui(self):
-        root = QWidget()
-        root.setObjectName("root")
-        self.setCentralWidget(root)
-        outer = QVBoxLayout(root)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(0)
-
-        # Üst bar
-        header = QHBoxLayout()
-        header.setContentsMargins(24, 18, 24, 10)
-        titles = QVBoxLayout()
-        titles.setSpacing(2)
+    def _make_header(self, subtitle: str) -> QFrame:
+        header = QFrame()
+        header.setObjectName("header")
+        h = QHBoxLayout(header)
+        h.setContentsMargins(20, 12, 20, 12)
+        h.setSpacing(10)
+        left = QVBoxLayout()
+        left.setSpacing(1)
+        row = QHBoxLayout()
+        row.setSpacing(8)
         title = QLabel(APP_TITLE)
         title.setObjectName("title")
-        sub = QLabel("Fotoğraf ve videoları çekim tarihine göre klasörlere ayırır")
+        ver = QLabel(f"v{APP_VERSION}")
+        ver.setObjectName("version")
+        row.addWidget(title)
+        row.addWidget(ver, 0, Qt.AlignBottom)
+        row.addStretch(1)
+        sub = QLabel(subtitle)
         sub.setObjectName("muted")
-        titles.addWidget(title)
-        titles.addWidget(sub)
-        header.addLayout(titles, 1)
-        self.theme_btn = QPushButton()
-        self.theme_btn.setObjectName("theme")
-        self.theme_btn.setFixedHeight(34)  # QSS yarıçapı yükseklikten büyük olursa köşe yuvarlanmaz
-        self.theme_btn.setCursor(Qt.PointingHandCursor)
-        self.theme_btn.clicked.connect(self.toggle_theme)
-        header.addWidget(self.theme_btn, 0, Qt.AlignVCenter)
-        outer.addLayout(header)
+        left.addLayout(row)
+        left.addWidget(sub)
+        h.addLayout(left, 1)
+        seg = QHBoxLayout()
+        seg.setSpacing(0)
+        self.theme_dark = QPushButton("Koyu")
+        self.theme_dark.setObjectName("segL")
+        self.theme_light = QPushButton("Açık")
+        self.theme_light.setObjectName("segR")
+        group = QButtonGroup(self)
+        group.setExclusive(True)
+        for b, name in ((self.theme_dark, "dark"), (self.theme_light, "light")):
+            b.setCheckable(True)
+            b.setCursor(Qt.PointingHandCursor)
+            group.addButton(b)
+            b.clicked.connect(lambda _=False, n=name: self.apply_theme(n))
+            seg.addWidget(b)
+        h.addLayout(seg)
+        return header
 
-        # Kaydırılabilir alan: sekmeler + ortak kayıt kartı
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.body = QWidget()
-        self.body.setObjectName("body")
-        body = QVBoxLayout(self.body)
-        body.setContentsMargins(24, 6, 24, 20)
-        body.setSpacing(14)
-        scroll.setWidget(self.body)
-        outer.addWidget(scroll, 1)
-
-        self.tabs = QTabWidget()
-        self.tabs.setDocumentMode(True)
-        self.tabs.tabBar().setDrawBase(False)
-        self.tabs.addTab(self._make_sort_tab(), "Tarihe Göre Ayır")
-        self.tabs.addTab(self._make_archive_tab(), "Adlandır ve Arşivle")
-        self.tabs.currentChanged.connect(self._fit_tab_height)
-        body.addWidget(self.tabs)
-
-        # -- Kayıt (iki sekme için ortak) --
-        card = Card("Kayıt")
-        self.log_box = QPlainTextEdit()
-        self.log_box.setObjectName("log")
-        self.log_box.setReadOnly(True)
-        self.log_box.setMaximumBlockCount(5000)
-        self.log_box.setMinimumHeight(190)
-        card.wide(self.log_box)
-        body.addWidget(card)
-        body.addStretch(1)
-        self._fit_tab_height(0)
-
-        # Alt çubuk: Başlat / ilerleme (her zaman görünür)
+    def _make_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("bar")
         bl = QHBoxLayout(bar)
-        bl.setContentsMargins(24, 12, 24, 12)
+        bl.setContentsMargins(20, 12, 20, 12)
         bl.setSpacing(14)
         self.run_btn = QPushButton("Başlat")
-        self.run_btn.setObjectName("primary")
+        self.run_btn.setProperty("role", "action")
         self.run_btn.setCursor(Qt.PointingHandCursor)
         self.run_btn.clicked.connect(self.on_run_clicked)
         self.progress = QProgressBar()
@@ -1072,8 +776,115 @@ class MainWindow(QMainWindow):
         bl.addWidget(self.run_btn)
         bl.addWidget(self.progress, 1)
         bl.addWidget(self.status_label)
-        outer.addWidget(bar)
+        return bar
 
+    def _set_run_state(self, running: bool):
+        self.run_btn.setObjectName("cancel" if running else "")
+        self.run_btn.setText("Durdur" if running else "Başlat")
+        st = self.run_btn.style()
+        st.unpolish(self.run_btn)
+        st.polish(self.run_btn)
+
+    # ----- klasör alanları (son kullanılanlar açılır listesi) -----
+    def _hist(self, key: str) -> list:
+        v = self.settings.value(f"history/{key}", [])
+        if isinstance(v, str):
+            v = [v]
+        return [x for x in (v or []) if x]
+
+    def _hist_add(self, key: str, path: str):
+        items = [x for x in self._hist(key) if x != path]
+        items.insert(0, path)
+        self.settings.setValue(f"history/{key}", items[:10])
+
+    def _hist_del(self, key: str, path: str):
+        self.settings.setValue(f"history/{key}", [x for x in self._hist(key) if x != path])
+
+    def _path_field(self, key: str, dialog_title: str, on_pick=None) -> PathField:
+        def remember(p):
+            self._hist_add(key, p)
+            if on_pick:
+                on_pick(p)
+        f = PathField("", lambda _t: None, lambda: self._hist(key), remember,
+                      lambda p: self._hist_del(key, p), "Seç…", "Son kullanılan klasörler",
+                      "Henüz geçmiş yok", dialog_title)
+        f.edit.setPlaceholderText("Seçin veya klasörü buraya sürükleyin…")
+        return f
+
+    @staticmethod
+    def _autofill(field: PathField, src: str, name: str):
+        if not field.text():
+            field.setText(str(Path(src) / name))
+
+    # ----- arayüz -----
+    def _build_ui(self):
+        root = QWidget()
+        root.setObjectName("root")
+        self.setCentralWidget(root)
+        outer = QVBoxLayout(root)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        outer.addWidget(self._make_header("Fotoğraf ve videoları tarihe göre ayırır, adlandırır ve arşivler"))
+
+        mid = QHBoxLayout()
+        mid.setSpacing(0)
+
+        # Sol gezinme çubuğu (Breeze tarzı)
+        self.sidebar = QFrame()
+        self.sidebar.setObjectName("sidebar")
+        self.sidebar.setFixedWidth(200)
+        sl = QVBoxLayout(self.sidebar)
+        sl.setContentsMargins(0, 8, 0, 8)
+        sl.setSpacing(0)
+        self.nav = QButtonGroup(self)
+        self.nav.setExclusive(True)
+        self.stack = QStackedWidget()
+        pages = (("Tarihe Göre Ayır", self._make_sort_tab), ("Adlandır ve Arşivle", self._make_archive_tab))
+        for i, (label, maker) in enumerate(pages):
+            b = QPushButton(label)
+            b.setObjectName("nav")
+            b.setCheckable(True)
+            b.setCursor(Qt.PointingHandCursor)
+            self.nav.addButton(b, i)
+            sl.addWidget(b)
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            page = maker()
+            page.layout().setContentsMargins(20, 16, 20, 12)
+            scroll.setWidget(page)
+            self.stack.addWidget(scroll)
+        sl.addStretch(1)
+        self.nav.button(0).setChecked(True)
+        self.nav.idClicked.connect(self.stack.setCurrentIndex)
+        self.stack.currentChanged.connect(lambda i: self.nav.button(i).setChecked(True))
+        mid.addWidget(self.sidebar)
+        vline = QFrame()
+        vline.setObjectName("vline")
+        mid.addWidget(vline)
+
+        # İçerik: sayfa + ortak kayıt kartı
+        content = QVBoxLayout()
+        content.setSpacing(0)
+        content.addWidget(self.stack, 1)
+        card = Card("Kayıt")
+        self.log_box = QPlainTextEdit()
+        self.log_box.setObjectName("log")
+        self.log_box.setReadOnly(True)
+        self.log_box.setMaximumBlockCount(5000)
+        self.log_box.setMinimumHeight(120)
+        self.log_box.setMaximumHeight(170)
+        card.wide(self.log_box)
+        wrap = QWidget()
+        wl = QVBoxLayout(wrap)
+        wl.setContentsMargins(20, 0, 20, 12)
+        wl.addWidget(card)
+        content.addWidget(wrap)
+        mid.addLayout(content, 1)
+        outer.addLayout(mid, 1)
+
+        outer.addWidget(self._make_bar())
         self._on_preset_change(self.preset_combo.currentText())
 
     def _make_tab_page(self):
@@ -1084,32 +895,21 @@ class MainWindow(QMainWindow):
         lay.setSpacing(14)
         return page, lay
 
-    def _fit_tab_height(self, idx: int):
-        """Sekme yüksekliği yalnızca görünen sayfaya göre olsun (boşluk kalmasın)."""
-        for i in range(self.tabs.count()):
-            w = self.tabs.widget(i)
-            w.setSizePolicy(QSizePolicy.Preferred,
-                            QSizePolicy.Preferred if i == idx else QSizePolicy.Ignored)
-        self.tabs.updateGeometry()
-
     def _make_sort_tab(self) -> QWidget:
         page, body = self._make_tab_page()
 
         # -- Klasörler --
         card = Card("Klasörler")
-        self.source_edit = FolderLineEdit()
-        self.dest_edit = FolderLineEdit()
-        b1, b2 = QPushButton("Seç…"), QPushButton("Seç…")
-        for b in (b1, b2):
-            b.setCursor(Qt.PointingHandCursor)
-        b1.clicked.connect(self.pick_source)
-        b2.clicked.connect(self.pick_dest)
-        card.row("Kaynak klasör", self.source_edit, b1)
-        card.row("Hedef klasör", self.dest_edit, b2)
-        self.recurse_cb = ModernCheckBox("Alt klasörleri de tara (recursive)")
+        self.source_edit = self._path_field(
+            "source", "Kaynak klasörü seçin",
+            lambda p: self._autofill(self.dest_edit, p, "Tarihe Göre Ayrılmış"))
+        self.dest_edit = self._path_field("dest", "Hedef klasörü seçin")
+        card.row("Kaynak klasör", self.source_edit)
+        card.row("Hedef klasör", self.dest_edit)
+        self.recurse_cb = Check("Alt klasörleri de tara (recursive)")
         self.recurse_cb.setChecked(True)
         card.wide(self.recurse_cb)
-        self.video_cb = ModernCheckBox("Videoları da dahil et (mp4, mov, avi, mkv, 3gp, wmv, mts…)")
+        self.video_cb = Check("Videoları da dahil et")
         card.wide(self.video_cb)
         video_hint = QLabel("Videolarda EXIF bilgisi olmadığından dosya tarihi kullanılır.")
         video_hint.setObjectName("hint")
@@ -1118,10 +918,10 @@ class MainWindow(QMainWindow):
 
         # -- Tarih ayarları --
         card = Card("Tarih Ayarları")
-        self.exif_cb = ModernCheckBox("Önce EXIF çekim tarihini kullan (yoksa dosya tarihine düş)")
+        self.exif_cb = Check("Önce EXIF çekim tarihini kullan (yoksa dosya tarihine düş)")
         self.exif_cb.setChecked(True)
         card.wide(self.exif_cb)
-        self.preset_combo = ChevronCombo()
+        self.preset_combo = Combo()
         self.preset_combo.addItems(list(FORMAT_PRESETS.keys()))
         self.preset_combo.currentTextChanged.connect(self._on_preset_change)
         card.row("Klasör formatı", self.preset_combo)
@@ -1136,10 +936,10 @@ class MainWindow(QMainWindow):
 
         # -- Sıralama --
         card = Card("Sıralama")
-        self.order_combo = ChevronCombo()
+        self.order_combo = Combo()
         self.order_combo.addItems(["Eskiden yeniye", "Yeniden eskiye"])
         card.row("İşlem yönü", self.order_combo)
-        self.prefix_cb = ModernCheckBox("Klasör adlarının başına sıra numarası ekle (01 - …, 02 - …)")
+        self.prefix_cb = Check("Klasör adlarının başına sıra numarası ekle (01 - …, 02 - …)")
         card.wide(self.prefix_cb)
         body.addWidget(card)
 
@@ -1147,8 +947,8 @@ class MainWindow(QMainWindow):
         card = Card("İşlem")
         radios = QHBoxLayout()
         radios.setSpacing(28)
-        self.copy_radio = ModernRadio("Kopyala (kaynak dosyalar kalır)")
-        self.move_radio = ModernRadio("Taşı (kaynak dosyalar silinir)")
+        self.copy_radio = Radio("Kopyala (kaynak dosyalar kalır)")
+        self.move_radio = Radio("Taşı (kaynak dosyalar silinir)")
         self.copy_radio.setChecked(True)
         group = QButtonGroup(self)
         group.addButton(self.copy_radio)
@@ -1160,7 +960,7 @@ class MainWindow(QMainWindow):
         wrap.setLayout(radios)
         radios.setContentsMargins(0, 0, 0, 0)
         card.wide(wrap)
-        self.dry_cb = ModernCheckBox("Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)")
+        self.dry_cb = Check("Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)")
         card.wide(self.dry_cb)
         body.addWidget(card)
 
@@ -1198,19 +998,16 @@ class MainWindow(QMainWindow):
 
         # -- Klasörler --
         card = Card("Klasörler")
-        self.a_source = FolderLineEdit()
-        self.a_dest = FolderLineEdit()
-        b1, b2 = QPushButton("Seç…"), QPushButton("Seç…")
-        for b in (b1, b2):
-            b.setCursor(Qt.PointingHandCursor)
-        b1.clicked.connect(self.pick_a_source)
-        b2.clicked.connect(self.pick_a_dest)
-        card.row("Kaynak klasör", self.a_source, b1)
-        card.row("Arşiv klasörü", self.a_dest, b2)
-        self.a_recurse = ModernCheckBox("Alt klasörleri de tara (recursive)")
+        self.a_source = self._path_field(
+            "a_source", "Kaynak klasörü seçin",
+            lambda p: self._autofill(self.a_dest, p, "Arşiv"))
+        self.a_dest = self._path_field("a_dest", "Arşiv klasörünü seçin")
+        card.row("Kaynak klasör", self.a_source)
+        card.row("Arşiv klasörü", self.a_dest)
+        self.a_recurse = Check("Alt klasörleri de tara (recursive)")
         self.a_recurse.setChecked(True)
         card.wide(self.a_recurse)
-        self.a_video = ModernCheckBox("Videoları da dahil et")
+        self.a_video = Check("Videoları da dahil et")
         self.a_video.setChecked(True)
         card.wide(self.a_video)
         body.addWidget(card)
@@ -1225,7 +1022,7 @@ class MainWindow(QMainWindow):
         card.row("Yer / konu", self.a_place)
         self.a_folder_fmt = QLineEdit("%Y-%m%d")
         card.row("Klasör tarihi", self.a_folder_fmt)
-        self.a_rename = ModernCheckBox("Dosyaları tarihe göre yeniden adlandır")
+        self.a_rename = Check("Dosyaları tarihe göre yeniden adlandır")
         self.a_rename.setChecked(True)
         card.wide(self.a_rename)
         self.a_name_fmt = QLineEdit("%Y-%m%d_%H%M%S")
@@ -1241,22 +1038,25 @@ class MainWindow(QMainWindow):
 
         # -- Tarih kaynağı --
         card = Card("Tarih Kaynağı")
-        self.a_exif = ModernCheckBox("Önce EXIF çekim tarihini (video: dosya içi tarih) kullan")
+        self.a_exif = Check("Önce EXIF / video içi tarihi kullan")
         self.a_exif.setChecked(True)
         card.wide(self.a_exif)
-        self.a_fname = ModernCheckBox("EXIF yoksa dosya adındaki tarihi kullan (IMG2026…, VID2026…, 2026-10-29 14.14.49)")
+        self.a_fname = Check("EXIF yoksa dosya adındaki tarihi kullan")
         self.a_fname.setChecked(True)
         card.wide(self.a_fname)
-        self.a_vutc = ModernCheckBox("Video tarihi UTC/GMT kayıtlı: yerel saate çevir")
+        fh = QLabel("IMG20261029141449, VID…, PXL_…, 2026-10-29 14.14.49 gibi adlardan okunur")
+        fh.setObjectName("hint")
+        card.wide(fh)
+        self.a_vutc = Check("Video tarihi UTC/GMT kayıtlı: yerel saate çevir")
         self.a_vutc.setChecked(True)
         card.wide(self.a_vutc)
-        self.a_tz = ChevronCombo()
+        self.a_tz = Combo()
         for h in range(-24, 29):
             self.a_tz.addItem(tz_label(h / 2), h / 2)
         self.a_tz.setCurrentIndex(self.a_tz.findData(3.0))
         card.row("Saat dilimi", self.a_tz)
         self.a_vutc.toggled.connect(self.a_tz.setEnabled)
-        self.a_fallback = ChevronCombo()
+        self.a_fallback = Combo()
         self.a_fallback.addItem("Dosya tarihi (yaklaşık)", "mtime")
         self.a_fallback.addItem("Elle girdiğim tarih (yaklaşık)", "manual")
         self.a_fallback.addItem("Atla (işlem yapma)", "skip")
@@ -1268,7 +1068,7 @@ class MainWindow(QMainWindow):
         card.row("Yaklaşık tarih", self.a_manual)
         self.a_fallback.currentIndexChanged.connect(
             lambda _i: self.a_manual.setEnabled(self.a_fallback.currentData() == "manual"))
-        self.a_write = ModernCheckBox("Bulunan/yaklaşık tarihi dosyanın EXIF'ine yaz (yalnızca JPEG, EXIF'i olmayanlara)")
+        self.a_write = Check("Bulunan/yaklaşık tarihi EXIF'e yaz (yalnızca JPEG, EXIF'i olmayanlara)")
         self.a_write.setChecked(True)
         if not PIEXIF_AVAILABLE:
             self.a_write.setChecked(False)
@@ -1282,8 +1082,8 @@ class MainWindow(QMainWindow):
         radios = QHBoxLayout()
         radios.setSpacing(28)
         radios.setContentsMargins(0, 0, 0, 0)
-        self.a_copy = ModernRadio("Kopyala (kaynak dosyalar kalır)")
-        self.a_move = ModernRadio("Taşı (kaynak dosyalar silinir)")
+        self.a_copy = Radio("Kopyala (kaynak dosyalar kalır)")
+        self.a_move = Radio("Taşı (kaynak dosyalar silinir)")
         self.a_copy.setChecked(True)
         group = QButtonGroup(self)
         group.addButton(self.a_copy)
@@ -1294,7 +1094,7 @@ class MainWindow(QMainWindow):
         wrap = QWidget()
         wrap.setLayout(radios)
         card.wide(wrap)
-        self.a_dry = ModernCheckBox("Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)")
+        self.a_dry = Check("Sadece önizleme yap (dosyaları gerçekten taşıma/kopyalama)")
         card.wide(self.a_dry)
         body.addWidget(card)
 
@@ -1312,30 +1112,6 @@ class MainWindow(QMainWindow):
         except (ValueError, KeyError):
             self.a_example.setText("Örnek: geçersiz format")
 
-    def pick_a_source(self):
-        d = QFileDialog.getExistingDirectory(self, "Kaynak klasörü seçin", self.a_source.text())
-        if d:
-            self.a_source.setText(d)
-            if not self.a_dest.text():
-                self.a_dest.setText(str(Path(d) / "Arşiv"))
-
-    def pick_a_dest(self):
-        d = QFileDialog.getExistingDirectory(self, "Arşiv klasörünü seçin", self.a_dest.text())
-        if d:
-            self.a_dest.setText(d)
-
-    def pick_source(self):
-        d = QFileDialog.getExistingDirectory(self, "Kaynak klasörü seçin", self.source_edit.text())
-        if d:
-            self.source_edit.setText(d)
-            if not self.dest_edit.text():
-                self.dest_edit.setText(str(Path(d) / "Tarihe Göre Ayrılmış"))
-
-    def pick_dest(self):
-        d = QFileDialog.getExistingDirectory(self, "Hedef klasörü seçin", self.dest_edit.text())
-        if d:
-            self.dest_edit.setText(d)
-
     def append_log(self, msg: str):
         self.log_box.appendPlainText(msg)
 
@@ -1347,7 +1123,7 @@ class MainWindow(QMainWindow):
             self.run_btn.setEnabled(False)
             self.run_btn.setText("Durduruluyor…")
             return
-        if self.tabs.currentIndex() == 1:
+        if self.stack.currentIndex() == 1:
             self.start_archive()
         else:
             self.start()
@@ -1361,8 +1137,8 @@ class MainWindow(QMainWindow):
 
     def _launch(self, worker):
         self._running = True
-        self.tabs.tabBar().setEnabled(False)
-        self.run_btn.setText("Durdur")
+        self.sidebar.setEnabled(False)
+        self._set_run_state(True)
         self.progress.setValue(0)
         self.status_label.setText("Hazırlanıyor…")
 
@@ -1469,9 +1245,9 @@ class MainWindow(QMainWindow):
         if dry:
             self.append_log("(Önizleme modundaydı, hiçbir dosya taşınmadı/kopyalanmadı.)")
         self._running = False
-        self.tabs.tabBar().setEnabled(True)
+        self.sidebar.setEnabled(True)
         self.run_btn.setEnabled(True)
-        self.run_btn.setText("Başlat")
+        self._set_run_state(False)
         if not cancelled and self.progress.maximum() > 0:
             self.progress.setValue(self.progress.maximum())
 

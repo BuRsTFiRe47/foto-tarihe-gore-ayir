@@ -64,12 +64,13 @@ try:
 except ImportError:
     PIEXIF_AVAILABLE = False
 
+from app_icon import app_icon  # gömülü uygulama simgesi (tools/make_icon.py)
 from breeze import (  # ortak Breeze teması (koyu arduvaz + mercan vurgu)
     PALETTES, PathField, Check, Combo, Radio, build_palette, build_qss,
 )
 
 APP_TITLE = "Foto Tarihe Göre Ayır"
-APP_VERSION = "1.6.0"
+APP_VERSION = "1.6.1"
 SETTINGS_ORG = "BuRsTFiRe47"
 SETTINGS_APP = "FotoTariheGoreAyir"
 
@@ -1261,7 +1262,15 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    if sys.platform == "win32":
+        # Görev çubuğunda "python" yerine bu uygulamanın kendi simgesi/grubu görünsün
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("BuRsTFiRe47.FotoTariheGoreAyir")
+        except Exception:
+            pass
     app = QApplication(sys.argv)
+    app.setWindowIcon(app_icon())
     app.setApplicationVersion(APP_VERSION)
     app.setStyle("Fusion")
     font = QFont()

@@ -88,10 +88,10 @@ python foto_tarihe_gore_ayir.py
 pip install PySide6 pillow piexif pyinstaller
 
 # Windows
-pyinstaller --onefile --noconsole --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+pyinstaller --onefile --noconsole --icon assets/icon.ico --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
 
 # macOS
-pyinstaller --windowed --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
+pyinstaller --windowed --icon assets/icon.icns --name "FotoTariheGoreAyir" foto_tarihe_gore_ayir.py
 ```
 
 > PyInstaller çapraz derleme yapamaz; her platformun paketini o platformda (ya da bu

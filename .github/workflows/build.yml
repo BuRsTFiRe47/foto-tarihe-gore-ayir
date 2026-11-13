@@ -28,7 +28,7 @@ jobs:
         run: pip install PySide6 pillow piexif pyinstaller
       - name: exe derle
         run: >
-          pyinstaller --onefile --noconsole
+          pyinstaller --onefile --noconsole --icon assets/icon.ico
           --name "FotoTariheGoreAyir"
           foto_tarihe_gore_ayir.py
       - uses: actions/upload-artifact@v4
@@ -48,7 +48,7 @@ jobs:
         run: pip install PySide6 pillow piexif pyinstaller
       - name: .app derle
         run: >
-          pyinstaller --windowed
+          pyinstaller --windowed --icon assets/icon.icns
           --name "FotoTariheGoreAyir"
           foto_tarihe_gore_ayir.py
       - name: .app dosyasını ziple
